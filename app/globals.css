@@ -168,3 +168,6 @@ button { cursor: pointer; }
 .loadingHeader{margin-top:2px}.loadingCards{grid-template-columns:repeat(3,1fr)}.skeletonPanel{height:150px}.loadingLabel{margin-top:9px;font-size:11px}.skeleton::after{animation-duration:.78s}
 
 @media(max-width:390px){.collectionCard{grid-template-columns:68px 1fr;padding:13px}.collectionRing{width:66px;height:66px}.receivableDashboard{padding:14px}.receivableDashboardMain strong{font-size:24px}.riskRing{width:70px;height:70px}.ordersOverview{gap:6px}.ordersOverview article{padding:9px 7px}.ordersOverview strong{font-size:15px}.agingRow{grid-template-columns:58px 1fr 58px;gap:6px}}
+
+/* v0.2.3 — automatic catalog SKU */
+.autoCodeInput[readonly]{background:linear-gradient(135deg,#f0faf5,#f8fbf9);color:var(--brand);font-weight:800;letter-spacing:.035em;cursor:default}.autoCodeInput[readonly]:focus{box-shadow:none;border-color:#cfe5d9}

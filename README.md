@@ -1,4 +1,4 @@
-# PesanLunas v0.2.1 — UI/UX + Performance Hotfix
+# PesanLunas v0.2.3 — Automatic SKU
 
 **Edition:** Single-install / per-client  
 **Tagline:** Pesanan tercatat, tagihan cepat lunas.
@@ -36,7 +36,7 @@ Release ini tetap **bukan SaaS multi-tenant**. Satu instalasi ditujukan untuk sa
 
 Gunakan:
 
-`supabase/PesanLunas_MASTER_Supabase_v1.2_CRUD_PERFORMANCE.sql`
+`supabase/PesanLunas_MASTER_Supabase_v1.3_AUTO_SKU.sql`
 
 Jalankan sekali pada Supabase baru, kemudian deploy source v0.2.1.
 
@@ -60,3 +60,11 @@ Setelah deploy:
 - Dashboard tidak lagi crash jika RPC performance v0.2.1 gagal; otomatis fallback ke query/RPC dasar.
 - Endpoint `/api/diagnostics` untuk memeriksa Auth + RPC business/dashboard/orders/receivables dengan pesan error asli.
 - Tidak membutuhkan SQL baru jika database v0.2.0/v0.2.1 sudah terpasang.
+
+## v0.2.3 Automatic SKU
+- SKU Produk/Jasa tidak lagi diketik manual.
+- Owner menentukan `Prefix SKU Produk/Jasa` di Pengaturan Usaha.
+- Database menghasilkan SKU atomik, contoh `KUE-000001`, `KUE-000002`.
+- Counter dipisahkan per prefix; mengganti prefix baru dapat mulai dari `000001`.
+- SKU yang sudah terbentuk dikunci saat edit agar histori transaksi konsisten.
+- Upgrade database berjalan: jalankan `supabase/migrations/202609220004_auto_sku.sql` sekali.

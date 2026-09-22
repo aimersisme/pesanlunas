@@ -123,3 +123,13 @@ Gunakan satu akun Owner utama dan, untuk pengujian role, satu email kedua.
 - [ ] Aging piutang 1–7 / 8–30 / >30 hari sesuai due date.
 - [ ] Progress pembayaran invoice berubah setelah cicilan dicatat.
 - [ ] Invoice lunas tidak muncul lagi pada daftar piutang aktif.
+
+
+## v0.2.3 — SKU Otomatis
+1. Pengaturan Usaha → ubah Prefix SKU menjadi `KUE` → Simpan.
+2. Produk & Jasa → Tambah → pastikan field SKU tidak bisa diedit dan preview `KUE-XXXXXX`.
+3. Simpan produk pertama → SKU harus `KUE-000001`.
+4. Simpan produk kedua → SKU harus `KUE-000002`.
+5. Edit produk pertama → SKU tetap dan tidak dapat diubah.
+6. Ubah prefix menjadi `JASA`, tambah produk → SKU mulai `JASA-000001`.
+7. Ubah prefix kembali `KUE`, tambah produk → sequence `KUE` melanjutkan nomor sebelumnya tanpa duplikat.

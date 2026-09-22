@@ -8,6 +8,7 @@ export type ActiveBusiness = {
   logo_url: string | null;
   timezone: string;
   whatsapp: string | null;
+  sku_prefix: string;
   role: "owner" | "admin" | "staff" | "finance";
 };
 
@@ -19,6 +20,7 @@ type BusinessRelation = {
   logo_url?: string | null;
   timezone?: string | null;
   whatsapp?: string | null;
+  sku_prefix?: string | null;
   deleted_at?: string | null;
 };
 
@@ -39,6 +41,7 @@ function asActiveBusiness(value: unknown): ActiveBusiness | null {
     logo_url: row.logo_url ? String(row.logo_url) : null,
     timezone: row.timezone ? String(row.timezone) : "Asia/Jakarta",
     whatsapp: row.whatsapp ? String(row.whatsapp) : null,
+    sku_prefix: row.sku_prefix ? String(row.sku_prefix) : "SKU",
     role: String(row.role) as ActiveBusiness["role"],
   };
 }
@@ -69,7 +72,7 @@ export async function getActiveBusiness(client?: ServerSupabaseClient): Promise<
   // Safe fallback for databases that have not received v0.2.1 patch yet.
   const { data: membership, error: membershipError } = await supabase
     .from("business_members")
-    .select(`business_id,role,businesses!inner(id,name,slug,logo_url,timezone,whatsapp,deleted_at)`)
+    .select(`business_id,role,businesses!inner(id,name,slug,logo_url,timezone,whatsapp,sku_prefix,deleted_at)`)
     .eq("status", "active")
     .is("businesses.deleted_at", null)
     .order("created_at", { ascending: true })
@@ -98,6 +101,7 @@ export async function getActiveBusiness(client?: ServerSupabaseClient): Promise<
     logo_url: business.logo_url ?? null,
     timezone: business.timezone || "Asia/Jakarta",
     whatsapp: business.whatsapp ?? null,
+    sku_prefix: business.sku_prefix || "SKU",
     role: membership.role as ActiveBusiness["role"],
   };
 }
