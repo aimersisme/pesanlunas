@@ -105,3 +105,8 @@ Fase berikutnya adalah membuat **CRUD Pelanggan + Catat Order dinamis**. Form Ca
 - Fixed strict TypeScript inference for Supabase nested `customers(name)` relations in the Orders and Dashboard pages.
 - Fixed Autoprefixer mixed-support warnings by using `flex-end`.
 - No database migration is required for this hotfix.
+
+## Build fix v0.1.2
+
+- Explicitly types Supabase SSR `setAll(cookiesToSet)` in both `lib/supabase/server.ts` and `middleware.ts` for strict TypeScript builds on Vercel.
+- Prevents `Parameter 'cookiesToSet' implicitly has an 'any' type` from failing `next build`.
