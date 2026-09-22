@@ -20,6 +20,6 @@ export default async function MorePage() {
       {menus.map(([Icon, title, desc]) => <button className="menuRow" key={title}><Icon size={20} /><span><strong>{title}</strong><small>{desc}</small></span><ChevronRight size={18} /></button>)}
     </section>
     <section className="menuPanel"><LogoutButton /></section>
-    <div className="buildNote"><strong>Foundation v0.1.1</strong><span>Auth ✓ · Onboarding ✓ · Dashboard ✓ · Pesanan read ✓ · Piutang + WA manual ✓</span></div>
+    <div className="buildNote"><strong>Foundation v0.1.3</strong><span>Auth ✓ · Onboarding ✓ · Dashboard ✓ · Pesanan read ✓ · Piutang + WA manual ✓</span></div>
   </AppShell>;
 }

@@ -8,6 +8,15 @@ import { formatDate, formatIDR } from "@/lib/format";
 export const dynamic = "force-dynamic";
 
 type CustomerRelation = { name?: string | null };
+type OrderRow = {
+  id: string;
+  order_number: string;
+  order_date: string;
+  status: string;
+  grand_total: number | string | null;
+  balance_due: number | string | null;
+  customers: unknown;
+};
 
 function getCustomer(value: unknown): CustomerRelation | null {
   if (Array.isArray(value)) return (value[0] as CustomerRelation | undefined) ?? null;
@@ -19,7 +28,7 @@ const tabs = [
   ["all", "Semua"], ["confirmed", "Baru"], ["in_progress", "Diproses"], ["completed", "Selesai"],
 ] as const;
 
-function statusLabel(status: string, balance: number) {
+function statusLabel(status: string, balance: number): [string, string] {
   if (balance === 0) return ["Lunas", "paid"];
   if (status === "in_progress") return ["Diproses", "process"];
   if (status === "completed") return ["Selesai", "paid"];
@@ -33,11 +42,12 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
   const active = params.status || "all";
   let query = supabase.from("orders").select("id,order_number,order_date,status,grand_total,balance_due,customers(name)").eq("business_id", business.id).is("deleted_at", null).order("created_at", { ascending: false }).limit(50);
   if (active !== "all") query = query.eq("status", active);
-  const { data: orderRows } = await query;
+  const { data: rawOrderRows } = await query;
+  const orderRows = (rawOrderRows ?? []) as unknown as OrderRow[];
   const needle = (params.q || "").trim().toLowerCase();
-  const orders = (orderRows || []).filter((order) => {
+  const orders = orderRows.filter((order: OrderRow) => {
     if (!needle) return true;
-    const customer = getCustomer(order.customers as unknown);
+    const customer = getCustomer(order.customers);
     return order.order_number.toLowerCase().includes(needle) || (customer?.name || "").toLowerCase().includes(needle);
   });
 
@@ -47,9 +57,9 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
       <form className="searchBox"><Search size={19} /><input name="q" defaultValue={params.q || ""} placeholder="Cari nama pelanggan atau nomor pesanan..." /></form>
       <div className="filterTabs">{tabs.map(([value, label]) => <Link key={value} className={active === value ? "active" : ""} href={`/orders?status=${value}`}>{label}</Link>)}</div>
       <section className="orderList">
-        {orders.length === 0 ? <div className="emptyPanel">Belum ada pesanan pada filter ini.</div> : orders.map((order) => {
-          const customer = getCustomer(order.customers as unknown);
-          const [label, tone] = statusLabel(order.status, Number(order.balance_due));
+        {orders.length === 0 ? <div className="emptyPanel">Belum ada pesanan pada filter ini.</div> : orders.map((order: OrderRow) => {
+          const customer = getCustomer(order.customers);
+          const [label, tone] = statusLabel(order.status, Number(order.balance_due ?? 0));
           const customerName = customer?.name?.trim() || "Pelanggan";
           const initials = customerName.split(/\s+/).slice(0, 2).map((part: string) => part.charAt(0)).join("").toUpperCase();
           return <article className="orderCard" key={order.id}>

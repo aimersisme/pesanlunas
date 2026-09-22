@@ -11,13 +11,20 @@ import { compactIDR, formatIDR, greeting } from "@/lib/format";
 export const dynamic = "force-dynamic";
 
 type CustomerRelation = { name?: string | null };
-
-function getCustomer(value: unknown): CustomerRelation | null {
-  if (Array.isArray(value)) return (value[0] as CustomerRelation | undefined) ?? null;
-  if (value && typeof value === "object") return value as CustomerRelation;
-  return null;
-}
-
+type RecentOrderRow = {
+  id: string;
+  order_number: string;
+  order_date: string;
+  grand_total: number | string | null;
+  balance_due: number | string | null;
+  status: string;
+  customers: unknown;
+};
+type MonthOrderRow = {
+  order_date: string;
+  grand_total: number | string | null;
+  status: string;
+};
 type Summary = {
   order_today: number;
   order_need_process: number;
@@ -28,6 +35,12 @@ type Summary = {
   overdue: number;
 };
 
+function getCustomer(value: unknown): CustomerRelation | null {
+  if (Array.isArray(value)) return (value[0] as CustomerRelation | undefined) ?? null;
+  if (value && typeof value === "object") return value as CustomerRelation;
+  return null;
+}
+
 export default async function DashboardPage() {
   const business = await getActiveBusiness();
   const supabase = await createClient();
@@ -35,19 +48,22 @@ export default async function DashboardPage() {
   const from = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}-01`;
   const to = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}-${String(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0)).getUTCDate()).padStart(2, "0")}`;
 
-  const [{ data: rawSummary }, { data: recent }, { data: monthOrders }] = await Promise.all([
+  const [{ data: rawSummary }, { data: recentData }, { data: monthOrderData }] = await Promise.all([
     supabase.rpc("get_dashboard_summary", { p_business_id: business.id, p_from: from, p_to: to }),
     supabase.from("orders").select("id,order_number,order_date,grand_total,balance_due,status,customers(name)").eq("business_id", business.id).is("deleted_at", null).order("created_at", { ascending: false }).limit(4),
     supabase.from("orders").select("order_date,grand_total,status").eq("business_id", business.id).gte("order_date", from).lte("order_date", to).is("deleted_at", null),
   ]);
 
-  const summary = (rawSummary || {}) as Partial<Summary>;
+  const summary = (rawSummary ?? {}) as Partial<Summary>;
+  const recent = (recentData ?? []) as unknown as RecentOrderRow[];
+  const monthOrders = (monthOrderData ?? []) as unknown as MonthOrderRow[];
   const days = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0)).getUTCDate();
-  const daily = Array.from({ length: days }, (_, index) => ({ day: index + 1, value: 0 }));
-  (monthOrders || []).forEach((row) => {
+  const daily = Array.from({ length: days }, (_unused, index) => ({ day: index + 1, value: 0 }));
+
+  monthOrders.forEach((row: MonthOrderRow) => {
     if (row.status === "cancelled") return;
     const day = Number(String(row.order_date).slice(-2));
-    if (daily[day - 1]) daily[day - 1].value += Number(row.grand_total || 0);
+    if (daily[day - 1]) daily[day - 1].value += Number(row.grand_total ?? 0);
   });
 
   return (
@@ -79,10 +95,10 @@ export default async function DashboardPage() {
       <section className="sectionBlock">
         <div className="sectionTitle"><h2>Aktivitas Terbaru</h2><Link href="/orders">Lihat Semua</Link></div>
         <div className="activityList">
-          {(recent || []).length === 0 ? <div className="emptyState">Belum ada order. Mulai dengan mencatat pesanan pertama.</div> : (recent || []).map((order) => {
-            const customer = getCustomer(order.customers as unknown);
+          {recent.length === 0 ? <div className="emptyState">Belum ada order. Mulai dengan mencatat pesanan pertama.</div> : recent.map((order: RecentOrderRow) => {
+            const customer = getCustomer(order.customers);
             return (
-              <Link href={`/orders`} className="activityRow" key={order.id}>
+              <Link href="/orders" className="activityRow" key={order.id}>
                 <span className="activityIcon"><ShoppingCart size={18} /></span>
                 <div><strong>{customer?.name || "Pelanggan"}</strong><small>{order.order_number} · {order.status.replaceAll("_", " ")}</small></div>
                 <b>{formatIDR(order.grand_total)}</b>

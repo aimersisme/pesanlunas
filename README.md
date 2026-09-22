@@ -110,3 +110,11 @@ Fase berikutnya adalah membuat **CRUD Pelanggan + Catat Order dinamis**. Form Ca
 
 - Explicitly types Supabase SSR `setAll(cookiesToSet)` in both `lib/supabase/server.ts` and `middleware.ts` for strict TypeScript builds on Vercel.
 - Prevents `Parameter 'cookiesToSet' implicitly has an 'any' type` from failing `next build`.
+
+## Build hardening v0.1.3
+
+- Explicit row types for Dashboard, Orders, and Receivables so Supabase `any` inference cannot create `noImplicitAny` build failures.
+- Explicit cookie callback item types in server client and middleware.
+- Dependency ranges are pinned for repeatable Vercel builds.
+- Next.js updated within the 15.5 maintenance line to 15.5.24.
+- No database migration is required.
