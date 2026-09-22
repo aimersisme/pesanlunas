@@ -10,6 +10,14 @@ import { compactIDR, formatIDR, greeting } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
+type CustomerRelation = { name?: string | null };
+
+function getCustomer(value: unknown): CustomerRelation | null {
+  if (Array.isArray(value)) return (value[0] as CustomerRelation | undefined) ?? null;
+  if (value && typeof value === "object") return value as CustomerRelation;
+  return null;
+}
+
 type Summary = {
   order_today: number;
   order_need_process: number;
@@ -72,8 +80,7 @@ export default async function DashboardPage() {
         <div className="sectionTitle"><h2>Aktivitas Terbaru</h2><Link href="/orders">Lihat Semua</Link></div>
         <div className="activityList">
           {(recent || []).length === 0 ? <div className="emptyState">Belum ada order. Mulai dengan mencatat pesanan pertama.</div> : (recent || []).map((order) => {
-            const customerRaw = order.customers as unknown;
-            const customer = Array.isArray(customerRaw) ? customerRaw[0] : customerRaw as { name?: string } | null;
+            const customer = getCustomer(order.customers as unknown);
             return (
               <Link href={`/orders`} className="activityRow" key={order.id}>
                 <span className="activityIcon"><ShoppingCart size={18} /></span>

@@ -98,3 +98,10 @@ supabase/migrations/
 ## Tahap berikutnya
 
 Fase berikutnya adalah membuat **CRUD Pelanggan + Catat Order dinamis**. Form Catat Order akan membaca `custom_field_definitions` hasil template usaha, membuat item pesanan, lalu memanggil RPC `create_order()` sehingga nomor order, snapshot invoice, total, dan optional DP tetap diproses secara atomik oleh database.
+
+
+## v0.1.1 build hotfix
+
+- Fixed strict TypeScript inference for Supabase nested `customers(name)` relations in the Orders and Dashboard pages.
+- Fixed Autoprefixer mixed-support warnings by using `flex-end`.
+- No database migration is required for this hotfix.

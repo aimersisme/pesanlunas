@@ -7,6 +7,14 @@ import { formatDate, formatIDR } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
+type CustomerRelation = { name?: string | null };
+
+function getCustomer(value: unknown): CustomerRelation | null {
+  if (Array.isArray(value)) return (value[0] as CustomerRelation | undefined) ?? null;
+  if (value && typeof value === "object") return value as CustomerRelation;
+  return null;
+}
+
 const tabs = [
   ["all", "Semua"], ["confirmed", "Baru"], ["in_progress", "Diproses"], ["completed", "Selesai"],
 ] as const;
@@ -29,8 +37,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
   const needle = (params.q || "").trim().toLowerCase();
   const orders = (orderRows || []).filter((order) => {
     if (!needle) return true;
-    const cRaw = order.customers as unknown;
-    const customer = Array.isArray(cRaw) ? cRaw[0] : cRaw as { name?: string } | null;
+    const customer = getCustomer(order.customers as unknown);
     return order.order_number.toLowerCase().includes(needle) || (customer?.name || "").toLowerCase().includes(needle);
   });
 
@@ -41,13 +48,13 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
       <div className="filterTabs">{tabs.map(([value, label]) => <Link key={value} className={active === value ? "active" : ""} href={`/orders?status=${value}`}>{label}</Link>)}</div>
       <section className="orderList">
         {orders.length === 0 ? <div className="emptyPanel">Belum ada pesanan pada filter ini.</div> : orders.map((order) => {
-          const cRaw = order.customers as unknown;
-          const customer = Array.isArray(cRaw) ? cRaw[0] : cRaw as { name?: string } | null;
+          const customer = getCustomer(order.customers as unknown);
           const [label, tone] = statusLabel(order.status, Number(order.balance_due));
-          const initials = (customer?.name || "P").split(" ").slice(0, 2).map((x) => x[0]).join("").toUpperCase();
+          const customerName = customer?.name?.trim() || "Pelanggan";
+          const initials = customerName.split(/\s+/).slice(0, 2).map((part: string) => part.charAt(0)).join("").toUpperCase();
           return <article className="orderCard" key={order.id}>
             <span className="customerAvatar">{initials}</span>
-            <div className="orderMain"><strong>{customer?.name || "Pelanggan"}</strong><small>{order.order_number}</small><small>{formatDate(order.order_date)}</small></div>
+            <div className="orderMain"><strong>{customerName}</strong><small>{order.order_number}</small><small>{formatDate(order.order_date)}</small></div>
             <div className="orderRight"><b>{formatIDR(order.grand_total)}</b><span className={`statusPill ${tone}`}>{label}</span></div>
             <ChevronRight size={20} className="orderChevron" />
           </article>;
