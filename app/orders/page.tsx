@@ -1,0 +1,59 @@
+import Link from "next/link";
+import { ChevronRight, Plus, Search } from "lucide-react";
+import { AppShell } from "@/components/app-shell";
+import { createClient } from "@/lib/supabase/server";
+import { getActiveBusiness } from "@/lib/business";
+import { formatDate, formatIDR } from "@/lib/format";
+
+export const dynamic = "force-dynamic";
+
+const tabs = [
+  ["all", "Semua"], ["confirmed", "Baru"], ["in_progress", "Diproses"], ["completed", "Selesai"],
+] as const;
+
+function statusLabel(status: string, balance: number) {
+  if (balance === 0) return ["Lunas", "paid"];
+  if (status === "in_progress") return ["Diproses", "process"];
+  if (status === "completed") return ["Selesai", "paid"];
+  return ["Belum Bayar", "unpaid"];
+}
+
+export default async function OrdersPage({ searchParams }: { searchParams: Promise<{ status?: string; q?: string }> }) {
+  const params = await searchParams;
+  const business = await getActiveBusiness();
+  const supabase = await createClient();
+  const active = params.status || "all";
+  let query = supabase.from("orders").select("id,order_number,order_date,status,grand_total,balance_due,customers(name)").eq("business_id", business.id).is("deleted_at", null).order("created_at", { ascending: false }).limit(50);
+  if (active !== "all") query = query.eq("status", active);
+  const { data: orderRows } = await query;
+  const needle = (params.q || "").trim().toLowerCase();
+  const orders = (orderRows || []).filter((order) => {
+    if (!needle) return true;
+    const cRaw = order.customers as unknown;
+    const customer = Array.isArray(cRaw) ? cRaw[0] : cRaw as { name?: string } | null;
+    return order.order_number.toLowerCase().includes(needle) || (customer?.name || "").toLowerCase().includes(needle);
+  });
+
+  return (
+    <AppShell>
+      <header className="pageHeader"><div><h1>Pesanan</h1><p>Kelola semua pesanan pelanggan</p></div><Link className="smallAddButton" href="/orders?new=1"><Plus size={18} /></Link></header>
+      <form className="searchBox"><Search size={19} /><input name="q" defaultValue={params.q || ""} placeholder="Cari nama pelanggan atau nomor pesanan..." /></form>
+      <div className="filterTabs">{tabs.map(([value, label]) => <Link key={value} className={active === value ? "active" : ""} href={`/orders?status=${value}`}>{label}</Link>)}</div>
+      <section className="orderList">
+        {orders.length === 0 ? <div className="emptyPanel">Belum ada pesanan pada filter ini.</div> : orders.map((order) => {
+          const cRaw = order.customers as unknown;
+          const customer = Array.isArray(cRaw) ? cRaw[0] : cRaw as { name?: string } | null;
+          const [label, tone] = statusLabel(order.status, Number(order.balance_due));
+          const initials = (customer?.name || "P").split(" ").slice(0, 2).map((x) => x[0]).join("").toUpperCase();
+          return <article className="orderCard" key={order.id}>
+            <span className="customerAvatar">{initials}</span>
+            <div className="orderMain"><strong>{customer?.name || "Pelanggan"}</strong><small>{order.order_number}</small><small>{formatDate(order.order_date)}</small></div>
+            <div className="orderRight"><b>{formatIDR(order.grand_total)}</b><span className={`statusPill ${tone}`}>{label}</span></div>
+            <ChevronRight size={20} className="orderChevron" />
+          </article>;
+        })}
+      </section>
+      <Link className="floatingCTA" href="/orders?new=1"><Plus size={22} /> Catat Order</Link>
+    </AppShell>
+  );
+}

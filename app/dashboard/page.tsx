@@ -1,0 +1,91 @@
+import Link from "next/link";
+import { Bell, ChevronRight, Clock3, Plus, ReceiptText, ShoppingCart, WalletCards } from "lucide-react";
+import { AppShell } from "@/components/app-shell";
+import { Brand } from "@/components/brand";
+import { StatCard } from "@/components/stat-card";
+import { MonthlyChart } from "@/components/monthly-chart";
+import { createClient } from "@/lib/supabase/server";
+import { getActiveBusiness } from "@/lib/business";
+import { compactIDR, formatIDR, greeting } from "@/lib/format";
+
+export const dynamic = "force-dynamic";
+
+type Summary = {
+  order_today: number;
+  order_need_process: number;
+  order_value_period: number;
+  cash_received_period: number;
+  active_receivables: number;
+  due_today: number;
+  overdue: number;
+};
+
+export default async function DashboardPage() {
+  const business = await getActiveBusiness();
+  const supabase = await createClient();
+  const now = new Date();
+  const from = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}-01`;
+  const to = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}-${String(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0)).getUTCDate()).padStart(2, "0")}`;
+
+  const [{ data: rawSummary }, { data: recent }, { data: monthOrders }] = await Promise.all([
+    supabase.rpc("get_dashboard_summary", { p_business_id: business.id, p_from: from, p_to: to }),
+    supabase.from("orders").select("id,order_number,order_date,grand_total,balance_due,status,customers(name)").eq("business_id", business.id).is("deleted_at", null).order("created_at", { ascending: false }).limit(4),
+    supabase.from("orders").select("order_date,grand_total,status").eq("business_id", business.id).gte("order_date", from).lte("order_date", to).is("deleted_at", null),
+  ]);
+
+  const summary = (rawSummary || {}) as Partial<Summary>;
+  const days = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0)).getUTCDate();
+  const daily = Array.from({ length: days }, (_, index) => ({ day: index + 1, value: 0 }));
+  (monthOrders || []).forEach((row) => {
+    if (row.status === "cancelled") return;
+    const day = Number(String(row.order_date).slice(-2));
+    if (daily[day - 1]) daily[day - 1].value += Number(row.grand_total || 0);
+  });
+
+  return (
+    <AppShell>
+      <header className="topHeader">
+        <Brand />
+        <button className="iconButton" aria-label="Notifikasi"><Bell size={22} /></button>
+      </header>
+
+      <section className="welcomeBlock">
+        <h1>{greeting(business.timezone)} 👋</h1>
+        <p>Semoga hari ini makin lancar jualannya.</p>
+      </section>
+
+      <section className="businessCard">
+        <span className="businessAvatar"><ReceiptText size={23} /></span>
+        <div><strong>{business.name}</strong><small>Order & piutang dalam satu tempat</small></div>
+        <ChevronRight size={22} />
+      </section>
+
+      <section className="statsGrid">
+        <StatCard icon={ShoppingCart} label="Order Hari Ini" value={String(summary.order_today ?? 0)} />
+        <StatCard icon={WalletCards} label="Belum Dibayar" value={compactIDR(summary.active_receivables ?? 0)} tone="red" />
+        <StatCard icon={Clock3} label="Jatuh Tempo" value={String((summary.due_today ?? 0) + (summary.overdue ?? 0))} tone="amber" />
+      </section>
+
+      <MonthlyChart data={daily} />
+
+      <section className="sectionBlock">
+        <div className="sectionTitle"><h2>Aktivitas Terbaru</h2><Link href="/orders">Lihat Semua</Link></div>
+        <div className="activityList">
+          {(recent || []).length === 0 ? <div className="emptyState">Belum ada order. Mulai dengan mencatat pesanan pertama.</div> : (recent || []).map((order) => {
+            const customerRaw = order.customers as unknown;
+            const customer = Array.isArray(customerRaw) ? customerRaw[0] : customerRaw as { name?: string } | null;
+            return (
+              <Link href={`/orders`} className="activityRow" key={order.id}>
+                <span className="activityIcon"><ShoppingCart size={18} /></span>
+                <div><strong>{customer?.name || "Pelanggan"}</strong><small>{order.order_number} · {order.status.replaceAll("_", " ")}</small></div>
+                <b>{formatIDR(order.grand_total)}</b>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
+      <Link className="floatingCTA" href="/orders?new=1"><Plus size={22} /> Catat Order</Link>
+    </AppShell>
+  );
+}
