@@ -24,6 +24,7 @@ export default function ErrorPage({
         <div className="formStack">
           <button className="primaryButton" onClick={() => reset()}>Coba Lagi</button>
           <a className="secondaryButton" href="/setup">Cek Konfigurasi</a>
+          <a className="secondaryButton" href="/api/diagnostics">Diagnostik Runtime</a>
           <a className="secondaryButton" href="/api/health">Health Check</a>
         </div>
       </section>

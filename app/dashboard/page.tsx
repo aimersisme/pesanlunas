@@ -5,6 +5,7 @@ import { Brand } from "@/components/brand";
 import { StatCard } from "@/components/stat-card";
 import { MonthlyChart } from "@/components/monthly-chart";
 import { createClient } from "@/lib/supabase/server";
+import { getActiveBusiness } from "@/lib/business";
 import { compactIDR, formatIDR, greeting } from "@/lib/format";
 import { redirect } from "next/navigation";
 
@@ -18,6 +19,11 @@ type Summary = {
 type RecentOrder = { id:string; order_number:string; order_date:string; grand_total:number|string|null; balance_due:number|string|null; status:string; customer_name:string|null };
 type ChartPoint = { day:number; value:number|string };
 type Payload = { business:Business|null; summary?:Partial<Summary>; recent?:RecentOrder[]; chart?:ChartPoint[] };
+type RawOrder = { id?:unknown; order_number?:unknown; order_date?:unknown; grand_total?:unknown; balance_due?:unknown; status?:unknown; created_at?:unknown };
+
+function emptySummary(): Summary {
+  return { order_today:0, order_need_process:0, order_value_period:0, cash_received_period:0, active_receivables:0, due_today:0, overdue:0, invoice_total_period:0, invoice_paid_period:0, collection_rate:0 };
+}
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -25,15 +31,49 @@ export default async function DashboardPage() {
   const from = `${now.getUTCFullYear()}-${String(now.getUTCMonth()+1).padStart(2,"0")}-01`;
   const lastDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth()+1, 0)).getUTCDate();
   const to = `${now.getUTCFullYear()}-${String(now.getUTCMonth()+1).padStart(2,"0")}-${String(lastDay).padStart(2,"0")}`;
-  const { data, error } = await supabase.rpc("get_single_dashboard_payload", { p_from: from, p_to: to });
-  if (error) {
-    if (error.message.includes("AUTH_REQUIRED")) redirect("/auth/login");
-    throw new Error(`DASHBOARD_PAYLOAD_FAILED: ${error.message}. Jalankan SQL patch v0.2.1.`);
+
+  let payload: Payload | null = null;
+  const fast = await supabase.rpc("get_single_dashboard_payload", { p_from: from, p_to: to });
+
+  if (!fast.error) {
+    payload = (fast.data ?? {}) as unknown as Payload;
+  } else {
+    if (fast.error.message.includes("AUTH_REQUIRED")) redirect("/auth/login");
+
+    // Runtime-safe fallback. A missing/broken performance RPC must never crash the app.
+    const active = await getActiveBusiness(supabase);
+    const [summaryResult, recentResult, chartResult] = await Promise.all([
+      supabase.rpc("get_dashboard_summary", { p_business_id: active.id, p_from: from, p_to: to }),
+      supabase.from("orders").select("id,order_number,order_date,grand_total,balance_due,status,created_at").eq("business_id", active.id).is("deleted_at", null).order("created_at", { ascending:false }).limit(5),
+      supabase.from("orders").select("order_date,grand_total").eq("business_id", active.id).is("deleted_at", null).gte("order_date", from).lte("order_date", to).neq("status", "cancelled"),
+    ]);
+
+    const summary: Summary = { ...emptySummary(), ...((summaryResult.data ?? {}) as Partial<Summary>) };
+    const recent: RecentOrder[] = ((recentResult.data ?? []) as RawOrder[]).map((row) => ({
+      id:String(row.id ?? ""), order_number:String(row.order_number ?? ""), order_date:String(row.order_date ?? ""),
+      grand_total:(row.grand_total as number|string|null|undefined) ?? 0, balance_due:(row.balance_due as number|string|null|undefined) ?? 0,
+      status:String(row.status ?? "draft"), customer_name:null,
+    })).filter((row) => Boolean(row.id));
+
+    const chartTotals = new Map<number, number>();
+    for (const row of (chartResult.data ?? []) as Array<{order_date?:string|null; grand_total?:number|string|null}>) {
+      const day = Number(String(row.order_date ?? "").slice(8,10));
+      if (!Number.isFinite(day) || day < 1) continue;
+      chartTotals.set(day, (chartTotals.get(day) ?? 0) + Number(row.grand_total ?? 0));
+    }
+    const chart: ChartPoint[] = Array.from(chartTotals.entries()).map(([day,value]) => ({day,value}));
+
+    payload = {
+      business:{ id:active.id, name:active.name, slug:active.slug, timezone:active.timezone, role:active.role },
+      summary,
+      recent,
+      chart,
+    };
   }
-  const payload = (data ?? {}) as unknown as Payload;
-  if (!payload.business) redirect("/onboarding");
+
+  if (!payload?.business) redirect("/onboarding");
   const business = payload.business;
-  const summary = payload.summary ?? {};
+  const summary = payload.summary ?? emptySummary();
   const recent = payload.recent ?? [];
   const chartMap = new Map((payload.chart ?? []).map((x) => [Number(x.day), Number(x.value ?? 0)]));
   const daily = Array.from({ length:lastDay }, (_,index) => ({ day:index+1, value:chartMap.get(index+1) ?? 0 }));

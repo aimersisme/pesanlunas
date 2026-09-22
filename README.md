@@ -55,3 +55,8 @@ Setelah deploy:
 - Fonnte/Starsender tetap opsional dan secret tetap server-side.
 - Invoice yang diterbitkan tetap snapshot.
 - Database schema tetap memakai `business_id` + RLS untuk isolasi dan struktur yang rapi, tetapi edition ini dijalankan sebagai satu bisnis per instalasi.
+
+## v0.2.2 Runtime Resilience
+- Dashboard tidak lagi crash jika RPC performance v0.2.1 gagal; otomatis fallback ke query/RPC dasar.
+- Endpoint `/api/diagnostics` untuk memeriksa Auth + RPC business/dashboard/orders/receivables dengan pesan error asli.
+- Tidak membutuhkan SQL baru jika database v0.2.0/v0.2.1 sudah terpasang.
