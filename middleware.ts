@@ -7,7 +7,7 @@ type CookieToSet = {
   options?: CookieOptions;
 };
 
-const protectedPrefixes = ["/dashboard", "/orders", "/receivables", "/more", "/onboarding"];
+const protectedPrefixes = ["/dashboard", "/orders", "/receivables", "/more", "/onboarding", "/customers", "/catalog", "/invoices", "/custom-fields", "/payment-methods", "/message-templates", "/settings", "/team", "/reports", "/activity", "/whatsapp", "/account"];
 
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
@@ -48,7 +48,7 @@ export async function middleware(request: NextRequest) {
 
   const { data, error } = await supabase.auth.getUser();
   const isProtected = protectedPrefixes.some((prefix: string) => path.startsWith(prefix));
-  const isAuth = path.startsWith("/auth/");
+  const shouldRedirectAuthenticatedFromAuth = path === "/auth/login" || path === "/auth/register";
 
   // If Supabase is temporarily unavailable, avoid a redirect loop. Let the page render its error boundary.
   if (error && isProtected) return response;
@@ -60,7 +60,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(nextUrl);
   }
 
-  if (isAuth && data.user) {
+  if (shouldRedirectAuthenticatedFromAuth && data.user) {
     const nextUrl = request.nextUrl.clone();
     nextUrl.pathname = "/dashboard";
     nextUrl.search = "";

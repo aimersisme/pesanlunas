@@ -11,12 +11,16 @@ const items = [
   { href: "/more", label: "Lainnya", icon: MoreHorizontal },
 ];
 
+const moreRoutes = ["/more","/customers","/catalog","/invoices","/custom-fields","/payment-methods","/message-templates","/settings","/team","/reports","/activity","/whatsapp","/account"];
+
 export function MobileNav() {
   const pathname = usePathname();
   return (
     <nav className="mobileNav" aria-label="Navigasi utama">
       {items.map(({ href, label, icon: Icon }) => {
-        const active = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
+        const active = href === "/more"
+          ? moreRoutes.some((route: string) => pathname.startsWith(route))
+          : pathname === href || (href === "/orders" && pathname.startsWith("/orders"));
         return (
           <Link className={`mobileNavItem ${active ? "active" : ""}`} href={href} key={href}>
             <Icon size={22} strokeWidth={active ? 2.7 : 2} />

@@ -1,25 +1,32 @@
-import { Boxes, ChevronRight, FileText, MessageCircle, Settings, SlidersHorizontal, Users } from "lucide-react";
+import Link from "next/link";
+import { Boxes, ChevronRight, ClipboardList, FileText, History, Landmark, MessageCircle, Settings, SlidersHorizontal, Users, UserRoundCog, CircleUserRound } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { getActiveBusiness } from "@/lib/business";
 import { LogoutButton } from "@/components/logout-button";
 
 const menus = [
-  [Users, "Pelanggan", "Kelola data pelanggan"],
-  [Boxes, "Produk & Jasa", "Katalog sederhana untuk order"],
-  [FileText, "Invoice", "Riwayat dan tautan invoice"],
-  [SlidersHorizontal, "Template & Custom Field", "Sesuaikan form order tiap usaha"],
-  [MessageCircle, "Integrasi WhatsApp", "Manual, Fonnte, atau Starsender"],
-  [Settings, "Pengaturan Usaha", "Profil, rekening, invoice, anggota"],
+  [Users, "Pelanggan", "Kelola data pelanggan", "/customers"],
+  [Boxes, "Produk & Jasa", "Katalog sederhana untuk order", "/catalog"],
+  [FileText, "Invoice", "Invoice, pembayaran, refund, link publik", "/invoices"],
+  [Landmark, "Metode Pembayaran", "Bank, e-wallet, QRIS, cash", "/payment-methods"],
+  [SlidersHorizontal, "Template & Custom Field", "Sesuaikan form order tiap usaha", "/custom-fields"],
+  [MessageCircle, "Integrasi WhatsApp", "Manual, Fonnte, atau Starsender", "/whatsapp"],
+  [ClipboardList, "Template Pesan", "Pesan invoice dan pengingat", "/message-templates"],
+  [UserRoundCog, "Anggota Tim", "Owner, Admin, Staff, Finance", "/team"],
+  [History, "Aktivitas", "Audit aktivitas penting", "/activity"],
+  [CircleUserRound, "Akun Saya", "Profil dan ganti password", "/account"],
+  [Settings, "Pengaturan Usaha", "Profil, prefix, provider", "/settings"],
 ] as const;
 
 export default async function MorePage() {
   const business = await getActiveBusiness();
   return <AppShell>
     <header className="pageHeader"><div><h1>Lainnya</h1><p>{business.name} · akses sebagai {business.role}</p></div></header>
+    <div className="quickLinks" style={{marginBottom:14}}><Link className="quickLink" href="/reports"><strong>Laporan</strong><small>Ringkasan + ekspor CSV</small></Link><Link className="quickLink" href="/orders/new"><strong>Catat Order</strong><small>Order + invoice + DP</small></Link></div>
     <section className="menuPanel">
-      {menus.map(([Icon, title, desc]) => <button className="menuRow" key={title}><Icon size={20} /><span><strong>{title}</strong><small>{desc}</small></span><ChevronRight size={18} /></button>)}
+      {menus.map(([Icon,title,desc,href]) => <Link className="menuRow" href={href} key={title}><Icon size={20}/><span><strong>{title}</strong><small>{desc}</small></span><ChevronRight size={18}/></Link>)}
     </section>
     <section className="menuPanel"><LogoutButton /></section>
-    <div className="buildNote"><strong>Foundation v0.1.5</strong><span>Auth ✓ · Onboarding ✓ · Dashboard ✓ · Pesanan read ✓ · Piutang + WA manual ✓</span></div>
+    <div className="buildNote"><strong>CRUD Tester v0.2.0</strong><span>Customer ✓ · Catalog ✓ · Order ✓ · Invoice/Payment ✓ · Custom Field ✓ · Settings ✓ · Team ✓ · Reports ✓</span></div>
   </AppShell>;
 }

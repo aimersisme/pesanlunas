@@ -27,7 +27,7 @@ export async function GET() {
 
     return NextResponse.json({
       ok: !authError && !dbError,
-      version: "0.1.5",
+      version: "0.2.0",
       vercelRegion: process.env.VERCEL_REGION ?? null,
       authMs,
       dbMs,
@@ -39,7 +39,7 @@ export async function GET() {
   } catch (error) {
     return NextResponse.json({
       ok: false,
-      version: "0.1.5",
+      version: "0.2.0",
       vercelRegion: process.env.VERCEL_REGION ?? null,
       totalMs: Math.round(performance.now() - started),
       error: error instanceof Error ? error.message : "Unknown error",

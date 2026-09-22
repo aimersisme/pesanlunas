@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Clock3, MessageCircle, WalletCards } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { createClient } from "@/lib/supabase/server";
@@ -38,7 +39,7 @@ export default async function ReceivablesPage() {
           return <article className="receivableCard" key={row.invoice_id}>
             <div className="receivableTop"><span className={`receivableIcon ${overdue ? "late" : ""}`}><Clock3 size={18} /></span><div><strong>{customerName}</strong><small>{row.invoice_number}</small></div><b>{formatIDR(row.balance_due)}</b></div>
             <div className="receivableMeta"><span>Jatuh tempo: {formatDate(row.due_date)}</span><span className={overdue ? "lateText" : ""}>{overdue ? `Terlambat ${Math.abs(Number(row.days_from_due ?? 0))} hari` : row.effective_payment_status === "partial" ? "Sudah ada pembayaran" : "Belum dibayar"}</span></div>
-            {phone ? <a className="waButton" target="_blank" rel="noreferrer" href={`https://wa.me/${phone}?text=${text}`}><MessageCircle size={18} /> Tagih via WhatsApp</a> : <span className="waDisabled">Nomor WhatsApp pelanggan belum diisi</span>}
+            <div className="crudCardActions"><Link className="miniButton primary" href={`/invoices/${row.invoice_id}`}>Detail / Catat Pembayaran</Link>{phone ? <a className="miniButton" target="_blank" rel="noreferrer" href={`https://wa.me/${phone}?text=${text}`}><MessageCircle size={15} /> WhatsApp</a> : <span className="waDisabled">WA belum diisi</span>}</div>
           </article>;
         })}
       </section>

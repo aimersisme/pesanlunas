@@ -65,6 +65,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
           {message && <div className="formMessage">{message}</div>}
           <button className="primaryButton" disabled={loading}>{loading ? "Memproses..." : mode === "login" ? "Masuk" : "Buat Akun"}</button>
         </form>
+        {mode === "login" && <p className="authSwitch" style={{marginTop:12}}><Link href="/auth/forgot">Lupa password?</Link></p>}
         <p className="authSwitch">
           {mode === "login" ? "Belum punya akun? " : "Sudah punya akun? "}
           <Link href={mode === "login" ? "/auth/register" : "/auth/login"}>{mode === "login" ? "Daftar" : "Masuk"}</Link>

@@ -53,7 +53,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
 
   return (
     <AppShell>
-      <header className="pageHeader"><div><h1>Pesanan</h1><p>Kelola semua pesanan pelanggan</p></div><Link className="smallAddButton" href="/orders?new=1"><Plus size={18} /></Link></header>
+      <header className="pageHeader"><div><h1>Pesanan</h1><p>Kelola semua pesanan pelanggan</p></div><Link className="smallAddButton" href="/orders/new"><Plus size={18} /></Link></header>
       <form className="searchBox"><Search size={19} /><input name="q" defaultValue={params.q || ""} placeholder="Cari nama pelanggan atau nomor pesanan..." /></form>
       <div className="filterTabs">{tabs.map(([value, label]) => <Link key={value} className={active === value ? "active" : ""} href={`/orders?status=${value}`}>{label}</Link>)}</div>
       <section className="orderList">
@@ -62,15 +62,15 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
           const [label, tone] = statusLabel(order.status, Number(order.balance_due ?? 0));
           const customerName = customer?.name?.trim() || "Pelanggan";
           const initials = customerName.split(/\s+/).slice(0, 2).map((part: string) => part.charAt(0)).join("").toUpperCase();
-          return <article className="orderCard" key={order.id}>
+          return <Link href={`/orders/${order.id}`} className="orderCard" key={order.id}>
             <span className="customerAvatar">{initials}</span>
             <div className="orderMain"><strong>{customerName}</strong><small>{order.order_number}</small><small>{formatDate(order.order_date)}</small></div>
             <div className="orderRight"><b>{formatIDR(order.grand_total)}</b><span className={`statusPill ${tone}`}>{label}</span></div>
             <ChevronRight size={20} className="orderChevron" />
-          </article>;
+          </Link>;
         })}
       </section>
-      <Link className="floatingCTA" href="/orders?new=1"><Plus size={22} /> Catat Order</Link>
+      <Link className="floatingCTA" href="/orders/new"><Plus size={22} /> Catat Order</Link>
     </AppShell>
   );
 }

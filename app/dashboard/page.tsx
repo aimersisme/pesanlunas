@@ -116,7 +116,7 @@ export default async function DashboardPage() {
         </div>
       </section>
 
-      <Link className="floatingCTA" href="/orders?new=1"><Plus size={22} /> Catat Order</Link>
+      <Link className="floatingCTA" href="/orders/new"><Plus size={22} /> Catat Order</Link>
     </AppShell>
   );
 }
