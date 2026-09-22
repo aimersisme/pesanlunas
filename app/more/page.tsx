@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Boxes, ChevronRight, ClipboardList, FileText, History, Landmark, MessageCircle, Settings, SlidersHorizontal, Users, UserRoundCog, CircleUserRound } from "lucide-react";
+import { Boxes, ChevronRight, ClipboardList, FileText, History, Landmark, MessageCircle, Palette, Settings, SlidersHorizontal, Users, UserRoundCog, CircleUserRound } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { getActiveBusiness } from "@/lib/business";
 import { LogoutButton } from "@/components/logout-button";
@@ -15,6 +15,7 @@ const menus = [
   [UserRoundCog, "Anggota Tim", "Owner, Admin, Staff, Finance", "/team"],
   [History, "Aktivitas", "Audit aktivitas penting", "/activity"],
   [CircleUserRound, "Akun Saya", "Profil dan ganti password", "/account"],
+  [Palette, "Tampilan & Tema", "10 preset + Custom Brand", "/appearance"],
   [Settings, "Pengaturan Usaha", "Profil, prefix, provider", "/settings"],
 ] as const;
 
@@ -27,6 +28,6 @@ export default async function MorePage() {
       {menus.map(([Icon,title,desc,href]) => <Link className="menuRow" href={href} key={title}><Icon size={20}/><span><strong>{title}</strong><small>{desc}</small></span><ChevronRight size={18}/></Link>)}
     </section>
     <section className="menuPanel"><LogoutButton /></section>
-    <div className="buildNote"><strong>CRUD Tester v0.2.0</strong><span>Customer ✓ · Catalog ✓ · Order ✓ · Invoice/Payment ✓ · Custom Field ✓ · Settings ✓ · Team ✓ · Reports ✓</span></div>
+    <div className="buildNote"><strong>PesanLunas v0.2.7</strong><span>CRUD ✓ · Quick Customer ✓ · Auto SKU ✓ · Team Role Guide ✓ · 10 Tema ✓</span></div>
   </AppShell>;
 }

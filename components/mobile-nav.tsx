@@ -11,7 +11,7 @@ const items = [
   { href: "/more", label: "Lainnya", icon: MoreHorizontal },
 ];
 
-const moreRoutes = ["/more","/customers","/catalog","/invoices","/custom-fields","/payment-methods","/message-templates","/settings","/team","/reports","/activity","/whatsapp","/account"];
+const moreRoutes = ["/more","/customers","/catalog","/invoices","/custom-fields","/payment-methods","/message-templates","/settings","/team","/reports","/activity","/whatsapp","/account","/appearance"];
 
 export function MobileNav() {
   const pathname = usePathname();
