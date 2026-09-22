@@ -28,39 +28,48 @@ function relationOne(value: unknown): BusinessRelation | null {
   return null;
 }
 
+function asActiveBusiness(value: unknown): ActiveBusiness | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const row = value as Record<string, unknown>;
+  if (!row.id || !row.name || !row.slug || !row.role) return null;
+  return {
+    id: String(row.id),
+    name: String(row.name),
+    slug: String(row.slug),
+    logo_url: row.logo_url ? String(row.logo_url) : null,
+    timezone: row.timezone ? String(row.timezone) : "Asia/Jakarta",
+    whatsapp: row.whatsapp ? String(row.whatsapp) : null,
+    role: String(row.role) as ActiveBusiness["role"],
+  };
+}
+
 /**
- * Resolve the first active business in a single database round-trip.
- *
- * Auth is already refreshed/checked by middleware. RLS remains the real
- * authorization boundary, so we intentionally avoid another auth.getUser()
- * request here. This removes two sequential network calls from every app page.
+ * Single-install resolver. v0.2.1 prefers the tiny no-arg RPC so each page only
+ * needs one fast request for the active business. It falls back to the v0.2.0
+ * query if the performance SQL patch has not been installed yet.
  */
 export async function getActiveBusiness(client?: ServerSupabaseClient): Promise<ActiveBusiness> {
   let supabase: ServerSupabaseClient;
   try {
     supabase = client ?? (await createClient());
   } catch (error) {
-    if (error instanceof Error && error.message === "PESANLUNAS_SUPABASE_NOT_CONFIGURED") {
-      redirect("/setup");
-    }
+    if (error instanceof Error && error.message === "PESANLUNAS_SUPABASE_NOT_CONFIGURED") redirect("/setup");
     throw error;
   }
 
+  const rpc = await supabase.rpc("get_single_business_context");
+  if (!rpc.error) {
+    const business = asActiveBusiness(rpc.data);
+    if (!business) redirect("/onboarding");
+    return business;
+  }
+
+  if (rpc.error.message.includes("AUTH_REQUIRED")) redirect("/auth/login");
+
+  // Safe fallback for databases that have not received v0.2.1 patch yet.
   const { data: membership, error: membershipError } = await supabase
     .from("business_members")
-    .select(`
-      business_id,
-      role,
-      businesses!inner (
-        id,
-        name,
-        slug,
-        logo_url,
-        timezone,
-        whatsapp,
-        deleted_at
-      )
-    `)
+    .select(`business_id,role,businesses!inner(id,name,slug,logo_url,timezone,whatsapp,deleted_at)`)
     .eq("status", "active")
     .is("businesses.deleted_at", null)
     .order("created_at", { ascending: true })
@@ -68,9 +77,16 @@ export async function getActiveBusiness(client?: ServerSupabaseClient): Promise<
     .maybeSingle();
 
   if (membershipError) {
+    // If RLS returned no usable session, send the visitor back to login rather than a blank onboarding.
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) redirect("/auth/login");
     throw new Error(`BUSINESS_MEMBERSHIP_QUERY_FAILED: ${membershipError.message}`);
   }
-  if (!membership) redirect("/onboarding");
+  if (!membership) {
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) redirect("/auth/login");
+    redirect("/onboarding");
+  }
 
   const business = relationOne((membership as { businesses?: unknown }).businesses);
   if (!business?.id || !business.name || !business.slug) redirect("/onboarding");

@@ -1,82 +1,57 @@
-# PesanLunas v0.2.0 — CRUD Tester
+# PesanLunas v0.2.1 — UI/UX + Performance Hotfix
 
+**Edition:** Single-install / per-client  
 **Tagline:** Pesanan tercatat, tagihan cepat lunas.
 
-Release ini dibuat untuk pengujian fitur end-to-end sebelum paket client final.
+Release ini tetap **bukan SaaS multi-tenant**. Satu instalasi ditujukan untuk satu client/bisnis dengan Supabase, GitHub, dan Vercel milik client tersebut.
 
-## Modul yang sudah bisa diuji
+## Yang dibenahi di v0.2.1
 
-- Auth + email confirmation + onboarding bisnis
-- Dashboard + statistik dasar
-- Pelanggan: tambah, lihat, edit, hapus/soft-delete
-- Produk/Jasa: tambah, lihat, edit, hapus/soft-delete
-- Pesanan: buat order multi-item, custom field dinamis, DP awal, status, detail, soft-delete
-- Invoice: list, detail, link publik, print/save as PDF browser
-- Pembayaran: DP/cicilan/pelunasan, refund, void payment
-- Piutang: list overdue/partial/unpaid, buka invoice, WhatsApp manual
-- Metode pembayaran: CRUD
-- Template/custom field: CRUD + dropdown/multiselect options
-- Template pesan: CRUD
-- Anggota tim: role/status + link undangan (butuh SQL patch v0.2.0)
-- Pengaturan usaha: profil, prefix dokumen, timezone, currency
-- WhatsApp: mode manual/Fonnte/Starsender (secret gateway tetap server-side)
-- Laporan: summary periode + export CSV order/pembayaran
-- Activity log untuk Owner/Admin
-- PWA mobile-first
+### Performa navigasi
+- Menghapus `auth.getUser()` dari middleware agar setiap perpindahan menu tidak melakukan network round-trip Auth tambahan.
+- Dashboard sekarang memakai **1 RPC payload** untuk business context + summary + chart + aktivitas terbaru.
+- Pesanan memakai **1 RPC payload** untuk counter + search + list.
+- Piutang memakai **1 RPC payload** untuk KPI + aging + list.
+- Menambah index pada hot path `business_members`, `orders`, dan `invoices`.
+- Service worker tidak lagi mengintersep semua GET request dinamis.
+- RLS tetap menjadi batas keamanan database.
 
-## Upgrade dari v0.1.5 yang sedang dipakai
+### UI/UX
+- Dashboard: kartu persentase pembayaran bulan ini.
+- Pesanan: ringkasan Total Order, Sisa Tagihan, dan Dalam Proses.
+- Piutang: dashboard total piutang, persentase terlambat, tingkat tertagih, jatuh tempo 7 hari, cicilan aktif, aging 1–7 / 8–30 / >30 hari, progress pembayaran per invoice.
+- Empty state dibuat lebih informatif dan punya CTA.
+- Card dibuat lebih hidup dengan gradient ringan, bukan putih polos.
 
-1. **Backup project/repo terlebih dahulu.**
-2. Jalankan hanya SQL patch berikut pada Supabase project lama:
-   `supabase/migrations/202609220002_crud_patch.sql`
-3. Replace source GitHub dengan source v0.2.0 ini.
-4. Pastikan environment variables Vercel tetap ada:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` atau `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-5. Deploy ulang di Vercel.
-6. Jangan jalankan migration initial lama lagi pada database yang sudah berisi schema v1.0.
+## Upgrade dari v0.2.0 yang sedang dipakai
+
+1. **Jalankan SQL patch ini sekali saja:**
+   `supabase/migrations/202609220003_performance_ui.sql`
+2. Replace source GitHub dengan source v0.2.1.
+3. Environment Vercel lama tetap dipakai.
+4. Redeploy Vercel. Disarankan **Clear Build Cache** sekali pada deployment pertama v0.2.1.
+5. Jangan jalankan MASTER SQL pada database yang sudah berjalan.
 
 ## Fresh install client baru
 
-Untuk Supabase baru, gunakan file:
+Gunakan:
 
-`supabase/PesanLunas_MASTER_Supabase_v1.1_CRUD.sql`
+`supabase/PesanLunas_MASTER_Supabase_v1.2_CRUD_PERFORMANCE.sql`
 
-Jalankan sekali pada SQL Editor, lalu deploy source ini ke GitHub/Vercel milik client.
+Jalankan sekali pada Supabase baru, kemudian deploy source v0.2.1.
 
-## Catatan penting
+## Test performa utama
 
-- Token Fonnte/Starsender tidak disimpan di tabel client-readable.
-- Invoice yang sudah diterbitkan adalah snapshot dan tidak boleh diedit diam-diam.
-- Jika nominal/item order perlu direvisi, void invoice terlebih dahulu, lalu lakukan revisi/reissue pada flow berikutnya.
-- Public invoice memakai token random yang di-hash di database.
-- Database tetap tenant-safe dengan `business_id` + RLS walau edition ini dipakai 1 bisnis per instalasi.
+Setelah deploy:
 
-## Test flow disarankan
+1. Login → Dashboard.
+2. Klik `Pesanan` → `Piutang` → `Beranda` beberapa kali.
+3. Perpindahan menu utama seharusnya jauh lebih cepat daripada v0.2.0 karena query berantai telah dipangkas.
+4. Buat order dengan DP lalu cek Piutang: KPI, persentase, aging, dan progress harus ikut berubah.
+5. Catat cicilan sampai lunas dan pastikan invoice hilang dari Piutang aktif.
 
-1. Tambah metode pembayaran.
-2. Tambah 2–3 pelanggan.
-3. Tambah produk/jasa.
-4. Cek custom field dari template bisnis.
-5. Catat order + DP.
-6. Buka invoice dan buat link publik.
-7. Catat cicilan kedua sampai lunas.
-8. Test refund/void payment pada order test.
-9. Buka Piutang dan test WhatsApp manual.
-10. Export laporan CSV.
-11. Test role anggota dengan akun email kedua.
+## Catatan
 
-## File pengujian
-
-Gunakan `TEST_CHECKLIST.md` agar test CRUD dilakukan berurutan dan gampang melacak modul yang belum lolos.
-
-## Environment opsional WhatsApp otomatis
-
-Tambahkan di Vercel hanya jika provider tersebut akan diuji:
-
-```env
-FONNTE_TOKEN=
-STARSENDER_API_KEY=
-```
-
-Secret gateway tidak memakai prefix `NEXT_PUBLIC_`.
+- Fonnte/Starsender tetap opsional dan secret tetap server-side.
+- Invoice yang diterbitkan tetap snapshot.
+- Database schema tetap memakai `business_id` + RLS untuk isolasi dan struktur yang rapi, tetapi edition ini dijalankan sebagai satu bisnis per instalasi.

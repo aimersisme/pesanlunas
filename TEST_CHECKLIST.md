@@ -113,3 +113,13 @@ Gunakan satu akun Owner utama dan, untuk pengujian role, satu email kedua.
 - [ ] Token gateway tidak muncul di browser/localStorage.
 - [ ] Public invoice token hanya membuka invoice yang sesuai.
 - [ ] Invoice void tidak menerima pembayaran baru.
+
+## v0.2.1 — Performance & Piutang UI
+- [ ] Jalankan migration `202609220003_performance_ui.sql` sekali.
+- [ ] Beranda → Pesanan → Piutang → Beranda tidak terasa menunggu lama seperti v0.2.0.
+- [ ] Dashboard menampilkan persentase tertagih bulan ini.
+- [ ] Pesanan menampilkan Total Order, Sisa Tagihan, Dalam Proses.
+- [ ] Piutang menampilkan total aktif, risiko terlambat, jatuh tempo 7 hari, tingkat tertagih, cicilan aktif.
+- [ ] Aging piutang 1–7 / 8–30 / >30 hari sesuai due date.
+- [ ] Progress pembayaran invoice berubah setelah cicilan dicatat.
+- [ ] Invoice lunas tidak muncul lagi pada daftar piutang aktif.
