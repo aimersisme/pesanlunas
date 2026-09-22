@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { readSupabasePublicConfig } from "@/lib/supabase/config";
 
 type CookieToSet = {
   name: string;
@@ -9,18 +10,22 @@ type CookieToSet = {
 
 export async function createClient() {
   const cookieStore = await cookies();
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) throw new Error("Supabase environment variables are missing.");
+  const config = readSupabasePublicConfig();
 
-  return createServerClient(url, key, {
+  if (!config) {
+    throw new Error("PESANLUNAS_SUPABASE_NOT_CONFIGURED");
+  }
+
+  return createServerClient(config.url, config.key, {
     cookies: {
       getAll() {
         return cookieStore.getAll();
       },
       setAll(cookiesToSet: CookieToSet[]) {
         try {
-          cookiesToSet.forEach(({ name, value, options }: CookieToSet) => cookieStore.set(name, value, options));
+          cookiesToSet.forEach(({ name, value, options }: CookieToSet) =>
+            cookieStore.set(name, value, options),
+          );
         } catch {
           // Server Components cannot always set cookies; middleware refreshes sessions.
         }

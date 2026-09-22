@@ -48,15 +48,17 @@ export default async function DashboardPage() {
   const from = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}-01`;
   const to = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}-${String(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0)).getUTCDate()).padStart(2, "0")}`;
 
-  const [{ data: rawSummary }, { data: recentData }, { data: monthOrderData }] = await Promise.all([
+  const [summaryResult, recentResult, monthOrderResult] = await Promise.all([
     supabase.rpc("get_dashboard_summary", { p_business_id: business.id, p_from: from, p_to: to }),
     supabase.from("orders").select("id,order_number,order_date,grand_total,balance_due,status,customers(name)").eq("business_id", business.id).is("deleted_at", null).order("created_at", { ascending: false }).limit(4),
     supabase.from("orders").select("order_date,grand_total,status").eq("business_id", business.id).gte("order_date", from).lte("order_date", to).is("deleted_at", null),
   ]);
 
-  const summary = (rawSummary ?? {}) as Partial<Summary>;
-  const recent = (recentData ?? []) as unknown as RecentOrderRow[];
-  const monthOrders = (monthOrderData ?? []) as unknown as MonthOrderRow[];
+  const dashboardWarning =
+    summaryResult.error?.message || recentResult.error?.message || monthOrderResult.error?.message || "";
+  const summary = (summaryResult.data ?? {}) as Partial<Summary>;
+  const recent = (recentResult.data ?? []) as unknown as RecentOrderRow[];
+  const monthOrders = (monthOrderResult.data ?? []) as unknown as MonthOrderRow[];
   const days = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0)).getUTCDate();
   const daily = Array.from({ length: days }, (_unused, index) => ({ day: index + 1, value: 0 }));
 
@@ -77,6 +79,12 @@ export default async function DashboardPage() {
         <h1>{greeting(business.timezone)} 👋</h1>
         <p>Semoga hari ini makin lancar jualannya.</p>
       </section>
+
+      {dashboardWarning ? (
+        <section className="formMessage" style={{ marginBottom: 14 }}>
+          Dashboard terhubung, tetapi ada query yang perlu diperiksa: {dashboardWarning}
+        </section>
+      ) : null}
 
       <section className="businessCard">
         <span className="businessAvatar"><ReceiptText size={23} /></span>

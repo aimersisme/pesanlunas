@@ -118,3 +118,11 @@ Fase berikutnya adalah membuat **CRUD Pelanggan + Catat Order dinamis**. Form Ca
 - Dependency ranges are pinned for repeatable Vercel builds.
 - Next.js updated within the 15.5 maintenance line to 15.5.24.
 - No database migration is required.
+
+## v0.1.4 runtime guard
+Jika deployment hijau tetapi halaman menampilkan `Application error`, buka `/api/health`.
+Versi ini menerima dua nama key Supabase:
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (direkomendasikan)
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` (legacy)
+
+Jika environment belum ada, halaman protected otomatis diarahkan ke `/setup` daripada menghasilkan generic server error.

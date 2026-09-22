@@ -23,7 +23,24 @@ export function formatDate(value: string | null | undefined) {
 }
 
 export function greeting(timezone = "Asia/Jakarta") {
-  const hour = Number(new Intl.DateTimeFormat("en-US", { hour: "2-digit", hour12: false, timeZone: timezone }).format(new Date()));
+  let hour: number;
+  try {
+    hour = Number(
+      new Intl.DateTimeFormat("en-US", {
+        hour: "2-digit",
+        hour12: false,
+        timeZone: timezone || "Asia/Jakarta",
+      }).format(new Date()),
+    );
+  } catch {
+    hour = Number(
+      new Intl.DateTimeFormat("en-US", {
+        hour: "2-digit",
+        hour12: false,
+        timeZone: "Asia/Jakarta",
+      }).format(new Date()),
+    );
+  }
   if (hour < 11) return "Selamat pagi";
   if (hour < 15) return "Selamat siang";
   if (hour < 18) return "Selamat sore";
