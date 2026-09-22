@@ -146,3 +146,7 @@ button { cursor: pointer; }
 .setupChecklist code{font-size:.86rem;word-break:break-all}
 .successBox{background:#f0fdf4;border-color:#bbf7d0}
 .secondaryButton{display:flex;align-items:center;justify-content:center;min-height:48px;padding:0 18px;border-radius:14px;border:1px solid #d8dee5;background:#fff;color:#172033;text-decoration:none;font-weight:700}
+
+/* v0.1.5: fast perceived navigation skeletons */
+.loadingHeader{display:flex;gap:12px;align-items:center;margin:14px 0 22px}.skeletonBlock{flex:1}.loadingCards{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.skeleton{position:relative;overflow:hidden;background:#edf2ef;border-radius:14px}.skeleton::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.75),transparent);animation:pesanLunasShimmer 1.15s infinite}.skeletonIcon{width:44px;height:44px;border-radius:13px}.skeletonTitle{width:44%;height:18px;margin-bottom:8px}.skeletonText{width:68%;height:11px}.skeletonCard{height:105px}.skeletonPanel{height:245px;margin-top:14px}.loadingLabel{text-align:center;color:#728096;font-size:13px;margin-top:14px}@keyframes pesanLunasShimmer{100%{transform:translateX(100%)}}
+@media (prefers-reduced-motion:reduce){.skeleton::after{animation:none}}

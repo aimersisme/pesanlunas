@@ -42,8 +42,8 @@ function getCustomer(value: unknown): CustomerRelation | null {
 }
 
 export default async function DashboardPage() {
-  const business = await getActiveBusiness();
   const supabase = await createClient();
+  const business = await getActiveBusiness(supabase);
   const now = new Date();
   const from = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}-01`;
   const to = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}-${String(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0)).getUTCDate()).padStart(2, "0")}`;

@@ -19,8 +19,8 @@ type ReceivableRow = {
 };
 
 export default async function ReceivablesPage() {
-  const business = await getActiveBusiness();
   const supabase = await createClient();
+  const business = await getActiveBusiness(supabase);
   const { data: rawData } = await supabase.from("v_receivables").select("*").eq("business_id", business.id).in("effective_payment_status", ["unpaid", "partial", "overdue"]).order("due_date", { ascending: true }).limit(100);
   const data = (rawData ?? []) as unknown as ReceivableRow[];
   const total = data.reduce((sum: number, row: ReceivableRow) => sum + Number(row.balance_due ?? 0), 0);

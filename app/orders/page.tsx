@@ -37,8 +37,8 @@ function statusLabel(status: string, balance: number): [string, string] {
 
 export default async function OrdersPage({ searchParams }: { searchParams: Promise<{ status?: string; q?: string }> }) {
   const params = await searchParams;
-  const business = await getActiveBusiness();
   const supabase = await createClient();
+  const business = await getActiveBusiness(supabase);
   const active = params.status || "all";
   let query = supabase.from("orders").select("id,order_number,order_date,status,grand_total,balance_due,customers(name)").eq("business_id", business.id).is("deleted_at", null).order("created_at", { ascending: false }).limit(50);
   if (active !== "all") query = query.eq("status", active);
