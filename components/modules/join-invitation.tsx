@@ -15,5 +15,5 @@ export function JoinInvitation({ token }: { token: string }) {
     if (error) return setMsg(error.message);
     window.location.href = "/dashboard";
   }
-  return <main className="authStage"><section className="authCard"><Brand/><div className="authIntro"><h1>Gabung ke Tim</h1><p>Terima undangan PesanLunas setelah login dengan email yang diundang.</p></div>{msg?<div className="formMessage">{msg}</div>:null}<button className="primaryButton" style={{width:"100%"}} onClick={()=>void accept()} disabled={busy||!token}>{busy?"Memproses...":"Terima Undangan"}</button><p className="authSwitch"><Link href="/auth/login">Login dulu jika belum masuk</Link></p></section></main>;
+  return <main className="authStage"><section className="authCard"><Brand showTagline/><div className="authIntro"><h1>Gabung ke Tim</h1><p>Terima undangan PesanLunas setelah login dengan email yang diundang.</p></div>{msg?<div className="formMessage">{msg}</div>:null}<button className="primaryButton" style={{width:"100%"}} onClick={()=>void accept()} disabled={busy||!token}>{busy?"Memproses...":"Terima Undangan"}</button><p className="authSwitch"><Link href="/auth/login">Login dulu jika belum masuk</Link></p></section></main>;
 }

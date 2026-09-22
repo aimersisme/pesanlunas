@@ -14,7 +14,7 @@ export default function SetupPage() {
   return (
     <main className="authStage">
       <section className="authCard setupCard">
-        <Brand />
+        <Brand showTagline />
         <div className="authIntro">
           <h1>{config ? "Konfigurasi Supabase terdeteksi" : "Supabase belum dikonfigurasi"}</h1>
           <p>

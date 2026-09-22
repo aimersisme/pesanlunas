@@ -50,7 +50,7 @@ export function OnboardingForm() {
   return (
     <main className="onboardingStage">
       <section className="onboardingCard">
-        <Brand />
+        <Brand showTagline />
         <div className="stepBadge">Langkah 1 dari 1</div>
         <h1>Siapkan usaha Anda</h1>
         <p className="muted">Pilih jenis usaha. PesanLunas otomatis menyiapkan field order yang relevan dan masih bisa Anda ubah nanti.</p>

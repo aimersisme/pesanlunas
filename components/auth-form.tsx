@@ -51,10 +51,9 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
   return (
     <main className="authStage">
       <section className="authCard">
-        <Brand />
+        <Brand showTagline />
         <div className="authIntro">
           <h1>{mode === "login" ? "Masuk ke PesanLunas" : "Mulai kelola order dengan rapi"}</h1>
-          <p>Pesanan tercatat, tagihan cepat lunas.</p>
         </div>
         <form onSubmit={submit} className="formStack">
           {mode === "register" && (

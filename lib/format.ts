@@ -41,9 +41,9 @@ export function greeting(timezone = "Asia/Jakarta") {
       }).format(new Date()),
     );
   }
-  if (hour < 11) return "Selamat pagi";
-  if (hour < 15) return "Selamat siang";
-  if (hour < 18) return "Selamat sore";
+  if (hour >= 5 && hour < 11) return "Selamat pagi";
+  if (hour >= 11 && hour < 15) return "Selamat siang";
+  if (hour >= 15 && hour < 18) return "Selamat sore";
   return "Selamat malam";
 }
 
