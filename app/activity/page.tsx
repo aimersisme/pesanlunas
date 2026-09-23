@@ -1,1 +1,0 @@
-import { AppShell } from "@/components/app-shell";import { ActivityLog } from "@/components/modules/activity-log";import { getActiveBusiness } from "@/lib/business";export const dynamic="force-dynamic";export default async function Page(){const b=await getActiveBusiness();return <AppShell><ActivityLog businessId={b.id} role={b.role}/></AppShell>}
