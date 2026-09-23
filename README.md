@@ -1,42 +1,82 @@
-# PesanLunas v0.2.7 — Theme Engine + Custom Brand
+# PesanLunas v0.2.10 — Single Install + Optional WhatsApp Auto Reminder
 
-Versi ini mencakup seluruh update v0.2.6 (Quick Customer Order), v0.2.5 (Team Fix + Panduan Role editable), Auto SKU, performance/runtime fix sebelumnya, lalu menambahkan **10 tema aplikasi + Custom Brand**.
+Versi ini membawa seluruh fitur v0.2.7 Theme Engine, Quick Customer Order, Team Role Guide, Auto SKU, CRUD, performance/runtime fixes, lalu menambahkan personalisasi dashboard.
 
-## 10 preset tema
-1. Emerald Fresh — clean/friendly (default)
-2. Coral Bloom — warm/creative
-3. Navy Executive — professional/bold
-4. Mocha Cream — warm/premium
-5. Mint Sky — airy/modern
-6. Rose Sakura — elegant/soft
-7. Terracotta Studio — natural/crafted
-8. Mono Luxe — minimal/luxe
-9. Citrus Pop — playful/energetic
-10. Midnight Glow — dark/tech
+## Yang baru
 
-Setiap tema mengubah bukan hanya warna utama, tetapi juga karakter card, radius, shadow, field, navbar, chart, tombol, stage/background, dan beberapa treatment visual agar tiap pembeli terasa punya aplikasi berbeda.
+### Sapaan personal berdasarkan waktu
+Dashboard sekarang menampilkan nama akun yang sedang login:
 
-## Custom Brand
-Menu baru: **Lainnya → Tampilan & Tema**.
+- Selamat pagi, Rina 👋
+- Selamat siang, Andi 👋
+- Selamat sore, Maya 👋
+- Selamat malam, Dewi 👋
 
-Owner dapat:
-- Preview tema tanpa menyimpan.
-- Terapkan preset.
-- Aktifkan Custom Brand.
-- Atur warna utama, warna aksen, background, warna card, warna teks.
-- Pilih model sudut: Soft / Balanced / Tegas.
-- Pilih model shadow: Floating / Soft / Flat.
+Sapaan mengikuti timezone usaha. Nama dibaca dari `profiles.full_name` dan tetap dibawa melalui optimized dashboard RPC agar tidak menambah round-trip halaman utama.
 
-Setting disimpan ke `business_settings` dengan key `appearance_theme` dan otomatis disinkronkan di browser. Role selain Owner dapat melihat dan mencoba preview, tetapi tidak dapat menyimpan.
+### Quote motivasi dinamis
+Menu **Lainnya → Pengaturan Usaha → Sapaan & Quote Dashboard** sekarang memungkinkan Owner:
 
-## Tidak perlu SQL patch
-v0.2.7 memakai tabel `business_settings` yang sudah ada. Untuk database pengembangan yang sekarang:
+- mengaktifkan/nonaktifkan quote dashboard;
+- mengedit quote bawaan;
+- menambah quote sendiri hingga 20;
+- menghapus quote;
+- mengembalikan 10 quote bawaan.
 
-1. Replace source GitHub dengan isi package v0.2.7.
-2. Push ke branch production.
-3. Redeploy Vercel.
-4. Jangan jalankan MASTER SQL atau patch baru untuk update ini.
-5. Buka Lainnya → Tampilan & Tema dan test 10 preset.
+Satu quote dipilih acak setiap kali Dashboard dibuka. Setting disimpan pada `business_settings` dengan key `dashboard_motivation`.
 
-## Catatan performa
-Theme runtime membaca localStorage terlebih dahulu sehingga perubahan tampilan terasa instan. Sinkronisasi setting Supabase dilakukan di background setelah halaman tampil dan hanya sekali per session browser.
+### Brand + tagline
+Brand header sekarang menggunakan logo PesanLunas transparan tanpa kotak/frame dan menampilkan tagline:
+
+**PesanLunas**  
+*Pesanan tercatat, tagihan cepat lunas.*
+
+Logo yang sama dipakai pada Login, Register, Onboarding, Setup, Dashboard, dan icon PWA.
+
+## Update database existing
+Untuk database project PesanLunas yang sudah memakai patch v0.2.1+, jalankan:
+
+`PesanLunas_v0.2.8_DASHBOARD_PERSONALIZATION_PATCH.sql`
+
+Patch ini tidak membuat tabel/kolom baru. Patch hanya meng-upgrade `get_single_dashboard_payload()` supaya nama user dan konfigurasi quote ikut dikirim dalam satu request dashboard.
+
+## Urutan update
+1. Jalankan patch SQL v0.2.8 sekali di Supabase SQL Editor.
+2. Replace source GitHub dengan isi package v0.2.8.
+3. Push dan redeploy Vercel.
+4. Login → Lainnya → Pengaturan Usaha → Sapaan & Quote Dashboard.
+5. Isi/edit quote lalu Simpan Pengaturan.
+6. Buka Dashboard beberapa kali untuk memastikan quote berganti secara acak.
+
+
+## v0.2.10 — Single Install + Reminder
+
+- Login publik tidak lagi menampilkan menu Daftar.
+- `/auth/register` hanya dapat dibuka dengan `OWNER_SETUP_KEY` untuk aktivasi Owner pertama.
+- Anggota baru masuk melalui link undangan `/join?token=...`, bukan registrasi publik.
+- Tanpa gateway WhatsApp: monitoring jatuh tempo tetap berjalan di Dashboard/Piutang dan tombol Tagih membuka WhatsApp manual dengan pesan siap kirim.
+- Dengan Fonnte/Starsender + Auto Reminder aktif: Edge Function `process-reminders` mengirim H-1, hari H, overdue 1/3/7 hari.
+- Edge Function tidak mengirim apa pun jika provider `manual`.
+- Owner dapat menjalankan **Jalankan Reminder Sekarang** dari menu Integrasi WhatsApp untuk pengujian.
+
+### Environment untuk tombol Jalankan Reminder Sekarang
+
+Vercel server environment membutuhkan `REMINDER_CRON_SECRET` dengan nilai yang sama seperti secret pada Supabase Edge Function. Token gateway tetap disimpan sebagai secret server-side/Edge Function.
+
+### Edge Function
+
+Deploy:
+
+```bash
+supabase functions deploy process-reminders --no-verify-jwt
+```
+
+Secrets:
+
+```bash
+supabase secrets set REMINDER_CRON_SECRET="STRING_RANDOM_PANJANG"
+supabase secrets set FONNTE_TOKEN="TOKEN_FONNTE"
+supabase secrets set STARSENDER_API_KEY="KEY_STARSENDER"
+```
+
+Scheduler tetap diperlukan untuk pengiriman otomatis tanpa membuka aplikasi. Jalankan Edge Function minimal 1x per hari; interval per jam lebih aman karena timezone setiap usaha dapat berbeda. Idempotency mencegah pengiriman event yang sama berulang.
