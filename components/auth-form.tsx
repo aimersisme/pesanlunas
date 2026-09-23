@@ -27,11 +27,14 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { full_name: name } },
+          options: {
+            data: { full_name: name },
+            emailRedirectTo: `${window.location.origin}/onboarding`,
+          },
         });
         if (error) throw error;
         if (!data.session) {
-          setMessage("Akun dibuat. Cek email konfirmasi Supabase, lalu login.");
+          setMessage("Akun Owner dibuat. Cek email konfirmasi, lalu login untuk menyiapkan usaha.");
           return;
         }
         router.replace("/onboarding");
@@ -53,22 +56,48 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
       <section className="authCard">
         <Brand showTagline />
         <div className="authIntro">
-          <h1>{mode === "login" ? "Masuk ke PesanLunas" : "Mulai kelola order dengan rapi"}</h1>
+          <h1>{mode === "login" ? "Masuk ke PesanLunas" : "Aktivasi Owner Pertama"}</h1>
+          {mode === "register" ? <p>Halaman ini khusus setup awal instalasi PesanLunas.</p> : null}
         </div>
         <form onSubmit={submit} className="formStack">
           {mode === "register" && (
-            <label>Nama Anda<input name="name" required placeholder="Contoh: Rina" autoComplete="name" /></label>
+            <label>
+              Nama Owner
+              <input name="name" required placeholder="Contoh: Rina" autoComplete="name" />
+            </label>
           )}
-          <label>Email<input name="email" required type="email" placeholder="nama@email.com" autoComplete="email" /></label>
-          <label>Password<input name="password" required minLength={6} type="password" placeholder="Minimal 6 karakter" autoComplete={mode === "login" ? "current-password" : "new-password"} /></label>
+          <label>
+            Email
+            <input name="email" required type="email" placeholder="nama@email.com" autoComplete="email" />
+          </label>
+          <label>
+            Password
+            <input
+              name="password"
+              required
+              minLength={6}
+              type="password"
+              placeholder="Minimal 6 karakter"
+              autoComplete={mode === "login" ? "current-password" : "new-password"}
+            />
+          </label>
           {message && <div className="formMessage">{message}</div>}
-          <button className="primaryButton" disabled={loading}>{loading ? "Memproses..." : mode === "login" ? "Masuk" : "Buat Akun"}</button>
+          <button className="primaryButton" disabled={loading}>
+            {loading ? "Memproses..." : mode === "login" ? "Masuk" : "Aktifkan Owner"}
+          </button>
         </form>
-        {mode === "login" && <p className="authSwitch" style={{marginTop:12}}><Link href="/auth/forgot">Lupa password?</Link></p>}
-        <p className="authSwitch">
-          {mode === "login" ? "Belum punya akun? " : "Sudah punya akun? "}
-          <Link href={mode === "login" ? "/auth/register" : "/auth/login"}>{mode === "login" ? "Daftar" : "Masuk"}</Link>
-        </p>
+        {mode === "login" ? (
+          <p className="authSwitch" style={{ marginTop: 12 }}>
+            <Link href="/auth/forgot">Lupa password?</Link>
+          </p>
+        ) : (
+          <p className="authSwitch">
+            <Link href="/auth/login">Kembali ke Login</Link>
+          </p>
+        )}
+        {mode === "login" ? (
+          <p className="authFootnote">Akun baru hanya dibuat melalui aktivasi Owner atau link undangan anggota tim.</p>
+        ) : null}
       </section>
     </main>
   );

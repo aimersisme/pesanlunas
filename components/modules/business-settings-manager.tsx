@@ -146,7 +146,7 @@ export function BusinessSettingsManager({ businessId, role }: { businessId: stri
       const settings = await supabase.from("business_settings").upsert(
         [
           { business_id: businessId, key: "whatsapp_provider", value: { provider } },
-          { business_id: businessId, key: "auto_reminder", value: { enabled: autoReminder } },
+          { business_id: businessId, key: "auto_reminder", value: { enabled: provider !== "manual" && autoReminder } },
           {
             business_id: businessId,
             key: "dashboard_motivation",
@@ -281,7 +281,7 @@ export function BusinessSettingsManager({ businessId, role }: { businessId: stri
         <div className="fieldGrid">
           <label className="formField">
             Provider
-            <select value={provider} onChange={(e) => setProvider(e.target.value)}>
+            <select value={provider} onChange={(e) => { const next=e.target.value; setProvider(next); if(next==="manual") setAutoReminder(false); }}>
               <option value="manual">Manual wa.me</option>
               <option value="fonnte">Fonnte</option>
               <option value="starsender">Starsender</option>
@@ -289,9 +289,19 @@ export function BusinessSettingsManager({ businessId, role }: { businessId: stri
             <span className="formHint">Token provider tetap disimpan server-side, bukan di database.</span>
           </label>
           <label className="checkboxField">
-            <input type="checkbox" checked={autoReminder} onChange={(e) => setAutoReminder(e.target.checked)} />
-            Aktifkan reminder otomatis
+            <input
+              type="checkbox"
+              checked={provider !== "manual" && autoReminder}
+              disabled={provider === "manual"}
+              onChange={(e) => setAutoReminder(e.target.checked)}
+            />
+            Auto kirim reminder WhatsApp
           </label>
+          <div className="full">
+            <Notice kind="info">
+              Reminder jatuh tempo di Dashboard/Piutang selalu aktif. Pengiriman WhatsApp otomatis hanya berjalan jika Fonnte/Starsender dipilih, token gateway tersedia, dan Auto kirim reminder diaktifkan.
+            </Notice>
+          </div>
         </div>
         <FormActions saving={saving} submitLabel="Simpan Pengaturan" />
       </form>

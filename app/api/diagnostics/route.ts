@@ -18,7 +18,7 @@ export async function GET() {
 
     return NextResponse.json({
       ok: !business.error && !dashboard.error && !orders.error && !receivables.error,
-      version:"0.2.6",
+      version:"0.2.9",
       authenticated:true,
       userId:auth.data.user.id,
       checks:{
@@ -29,6 +29,6 @@ export async function GET() {
       }
     }, { headers:{"Cache-Control":"no-store"} });
   } catch (error) {
-    return NextResponse.json({ ok:false, version:"0.2.6", error:error instanceof Error ? error.message : "Unknown error" }, { status:500, headers:{"Cache-Control":"no-store"} });
+    return NextResponse.json({ ok:false, version:"0.2.9", error:error instanceof Error ? error.message : "Unknown error" }, { status:500, headers:{"Cache-Control":"no-store"} });
   }
 }

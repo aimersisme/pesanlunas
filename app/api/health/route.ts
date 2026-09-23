@@ -13,7 +13,7 @@ export async function GET() {
   return NextResponse.json(
     {
       app: "PesanLunas",
-      version: "0.2.6",
+      version: "0.2.9",
       runtime: "ok",
       supabaseConfigured: Boolean(config),
       missingEnvironmentVariables: missing,

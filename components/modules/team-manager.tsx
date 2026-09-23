@@ -270,7 +270,7 @@ export function TeamManager({ businessId, role }: { businessId: string; role: st
             <label className="formField" style={{ marginTop: 12 }}>
               Link Undangan
               <input readOnly value={link} onFocus={(e) => e.currentTarget.select()} />
-              <span className="formHint">Berlaku 7 hari. Anggota harus login memakai email yang diundang.</span>
+              <span className="formHint">Berlaku 7 hari. Anggota baru dapat membuat password langsung dari link ini; tidak perlu menu Daftar publik.</span>
             </label>
           ) : null}
         </form>
